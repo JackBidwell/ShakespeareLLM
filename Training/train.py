@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -8,10 +9,10 @@ from models.transformer import GPTModel
 
 batch_size = 32
 block_size = 256
-epochs = 3
+epochs = 10
 learning_rate = 3e-4
 device = "cuda" if torch.cuda.is_available() else "cpu"
-max_batches_per_epoch = 1000
+max_batches_per_epoch = 500
 
 tokenizer = Tokenizer("data/raw/shakespeare.txt")
 
@@ -31,6 +32,10 @@ model = GPTModel(
     num_heads=4,
     block_size=block_size
 ).to(device)
+
+if os.path.exists("checkpoint.pt"):
+    model.load_state_dict(torch.load("checkpoint.pt", map_location=device))
+    print("Loaded existing checkpoint.pt")
 
 model.train()
 
@@ -71,7 +76,9 @@ for epoch in range(epochs):
     avg_loss = total_loss / batches_run
     print(f"Epoch {epoch} finished | Avg Loss: {avg_loss:.4f}")
 
+    torch.save(model.state_dict(), f"checkpoint_epoch_{epoch}.pt")
     torch.save(model.state_dict(), "checkpoint.pt")
-    print("Model saved to checkpoint.pt")
+    print(f"Saved checkpoint_epoch_{epoch}.pt")
+    print("Updated checkpoint.pt")
 
 print("Training complete.")

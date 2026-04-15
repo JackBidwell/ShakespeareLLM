@@ -20,13 +20,13 @@ model.load_state_dict(torch.load("checkpoint.pt", map_location=device))
 model.eval()
 
 
-def sample_next(logits, temperature=1.0):
+def sample_next(logits, temperature=0.8):
     logits = logits / temperature
-    probs = torch.softmax(logits, dim=-1)
+    probs = F.softmax(logits, dim=-1)
     return torch.multinomial(probs, num_samples=1)
 
 
-def generate(model, tokenizer, prompt, max_new_tokens=200, temperature=1.0):
+def generate(model, tokenizer, prompt, max_new_tokens=300, temperature=0.8):
     tokens = tokenizer.encode(prompt)
     tokens = torch.tensor(tokens, dtype=torch.long).unsqueeze(0).to(device)
 
@@ -41,14 +41,23 @@ def generate(model, tokenizer, prompt, max_new_tokens=200, temperature=1.0):
 
 
 if __name__ == "__main__":
-    prompt = "To be or not to be"
+    print("\nShakespeare LLM ready.")
+    print("Type 'exit' or 'quit' to stop.\n")
 
-    output = generate(
-        model,
-        tokenizer,
-        prompt,
-        max_new_tokens=300,
-        temperature=1.0
-    )
+    while True:
+        prompt = input("Enter a prompt: ")
 
-    print(output)
+        if prompt.lower() in ["exit", "quit"]:
+            break
+
+        output = generate(
+            model,
+            tokenizer,
+            prompt,
+            max_new_tokens=300,
+            temperature=0.8
+        )
+
+        print("\n--- OUTPUT ---\n")
+        print(output)
+        print("\n--------------\n")
