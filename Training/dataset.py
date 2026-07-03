@@ -1,21 +1,14 @@
 import torch
 
-class ShakespeareDataset:
-    def __init__(self, tokenizer, block_size=256):
-        self.tokenizer = tokenizer
-        self.block_size = block_size
 
-        # encode full Shakespeare text into tokens
-        self.data = tokenizer.encode(tokenizer.text)
-        self.data = torch.tensor(self.data, dtype=torch.long)
+def build_splits(tokenizer, val_fraction=0.1):
+    data = torch.tensor(tokenizer.encode(tokenizer.text), dtype=torch.long)
+    split = int(len(data) * (1 - val_fraction))
+    return data[:split], data[split:]
 
-    def __len__(self):
-        return len(self.data) - self.block_size
 
-    def __getitem__(self, idx):
-        chunk = self.data[idx : idx + self.block_size + 1]
-
-        x = chunk[:-1]  # input sequence
-        y = chunk[1:]   # shifted target sequence
-
-        return x, y
+def get_batch(data, block_size, batch_size, device):
+    ix = torch.randint(len(data) - block_size - 1, (batch_size,))
+    x = torch.stack([data[i:i + block_size] for i in ix])
+    y = torch.stack([data[i + 1:i + block_size + 1] for i in ix])
+    return x.to(device), y.to(device)
