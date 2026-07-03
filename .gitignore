@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+Models/gpt2_shakespeare/
+checkpoint.pt
+checkpoint_best.pt
+venv/
+*.log
