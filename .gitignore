@@ -5,3 +5,4 @@ checkpoint.pt
 checkpoint_best.pt
 venv/
 *.log
+.pytest_cache/
