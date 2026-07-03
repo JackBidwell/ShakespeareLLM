@@ -17,6 +17,7 @@ learning_rate = 3e-4
 min_lr = learning_rate / 10
 weight_decay = 0.1
 grad_clip = 1.0
+patience = 10  # stop if val loss hasn't improved in this many evals
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 tokenizer = Tokenizer("Data/Raw/shakespeare_clean.txt")
@@ -72,6 +73,7 @@ def estimate_loss():
 
 model.train()
 best_val_loss = float("inf")
+evals_without_improvement = 0
 
 for it in range(max_iters):
     lr = get_lr(it)
@@ -97,7 +99,16 @@ for it in range(max_iters):
 
         if losses["val"] < best_val_loss:
             best_val_loss = losses["val"]
+            evals_without_improvement = 0
             torch.save(model.state_dict(), "checkpoint_best.pt")
             print(f"New best val loss {best_val_loss:.4f}, saved checkpoint_best.pt")
+        else:
+            evals_without_improvement += 1
+            if evals_without_improvement >= patience:
+                print(
+                    f"No val improvement in {patience} evals "
+                    f"(best {best_val_loss:.4f}), stopping early at iter {it}."
+                )
+                break
 
 print("Training complete.")

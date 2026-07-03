@@ -17,6 +17,7 @@ learning_rate = 5e-5  # small: fine-tuning, not pretraining
 min_lr = learning_rate / 10
 weight_decay = 0.1
 grad_clip = 1.0
+patience = 5  # stop if val loss hasn't improved in this many evals
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 os.makedirs(OUT_DIR, exist_ok=True)
@@ -89,6 +90,7 @@ def estimate_loss():
 
 model.train()
 best_val_loss = float("inf")
+evals_without_improvement = 0
 
 for it in range(max_iters):
     lr = get_lr(it)
@@ -119,8 +121,17 @@ for it in range(max_iters):
 
         if losses["val"] < best_val_loss:
             best_val_loss = losses["val"]
+            evals_without_improvement = 0
             model.save_pretrained(f"{OUT_DIR}/best")
             tokenizer.save_pretrained(f"{OUT_DIR}/best")
             print(f"New best val loss {best_val_loss:.4f}, saved to {OUT_DIR}/best")
+        else:
+            evals_without_improvement += 1
+            if evals_without_improvement >= patience:
+                print(
+                    f"No val improvement in {patience} evals "
+                    f"(best {best_val_loss:.4f}), stopping early at iter {it}."
+                )
+                break
 
 print("Fine-tuning complete.")
