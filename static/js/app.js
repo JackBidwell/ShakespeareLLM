@@ -15,14 +15,12 @@ temperatureEl.addEventListener("input", () => (tempVal.textContent = temperature
 topKEl.addEventListener("input", () => (topkVal.textContent = topKEl.value));
 maxTokensEl.addEventListener("input", () => (lenVal.textContent = maxTokensEl.value));
 
-function typewrite(el, text, charsPerTick = 3, delayMs = 12) {
-  el.innerHTML = "";
-  const span = document.createElement("span");
-  const cursor = document.createElement("span");
-  cursor.className = "cursor";
-  el.appendChild(span);
-  el.appendChild(cursor);
+const MODEL_LABELS = {
+  gpt2: "GPT-2, fine-tuned",
+  scratch: "From-scratch GPT",
+};
 
+function typewrite(span, cursor, text, charsPerTick = 3, delayMs = 12) {
   let i = 0;
   const timer = setInterval(() => {
     span.textContent += text.slice(i, i + charsPerTick);
@@ -32,6 +30,49 @@ function typewrite(el, text, charsPerTick = 3, delayMs = 12) {
       cursor.remove();
     }
   }, delayMs);
+}
+
+function renderSingle(el, text) {
+  el.innerHTML = "";
+  const span = document.createElement("span");
+  const cursor = document.createElement("span");
+  cursor.className = "cursor";
+  el.appendChild(span);
+  el.appendChild(cursor);
+  typewrite(span, cursor, text);
+}
+
+function renderComparison(el, prompt, results) {
+  el.innerHTML = "";
+  const columns = document.createElement("div");
+  columns.className = "output-columns";
+  el.appendChild(columns);
+
+  for (const key of ["gpt2", "scratch"]) {
+    const col = document.createElement("div");
+    col.className = "output-column";
+
+    const heading = document.createElement("h3");
+    heading.textContent = MODEL_LABELS[key];
+    col.appendChild(heading);
+
+    const body = document.createElement("div");
+    col.appendChild(body);
+    columns.appendChild(col);
+
+    const result = results[key];
+    if (!result || result.error) {
+      body.innerHTML = `<p class="placeholder">${(result && result.error) || "No output."}</p>`;
+      continue;
+    }
+
+    const span = document.createElement("span");
+    const cursor = document.createElement("span");
+    cursor.className = "cursor";
+    body.appendChild(span);
+    body.appendChild(cursor);
+    typewrite(span, cursor, prompt + result.output);
+  }
 }
 
 async function generate() {
@@ -66,7 +107,11 @@ async function generate() {
       throw new Error(data.error || "Something went awry backstage.");
     }
 
-    typewrite(outputEl, prompt + data.output);
+    if (modelSelect.value === "both") {
+      renderComparison(outputEl, prompt, data);
+    } else {
+      renderSingle(outputEl, prompt + data.output);
+    }
   } catch (err) {
     outputEl.innerHTML = '<p class="placeholder">The page remains blank.</p>';
     errorEl.textContent = err.message;

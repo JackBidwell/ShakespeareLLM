@@ -28,14 +28,19 @@ def api_generate():
     if not prompt:
         return jsonify({"error": "A prompt is required."}), 400
 
+    gen_kwargs = dict(max_new_tokens=max_new_tokens, temperature=temperature, top_k=top_k)
+
+    if model_name == "both":
+        results = {}
+        for name in ("gpt2", "scratch"):
+            try:
+                results[name] = {"output": serve.generate(name, prompt, **gen_kwargs)}
+            except (FileNotFoundError, ValueError) as e:
+                results[name] = {"error": str(e)}
+        return jsonify(results)
+
     try:
-        output = serve.generate(
-            model_name,
-            prompt,
-            max_new_tokens=max_new_tokens,
-            temperature=temperature,
-            top_k=top_k,
-        )
+        output = serve.generate(model_name, prompt, **gen_kwargs)
     except FileNotFoundError as e:
         return jsonify({"error": str(e)}), 400
     except ValueError as e:

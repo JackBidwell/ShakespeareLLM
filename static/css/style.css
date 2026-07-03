@@ -261,6 +261,32 @@ body {
   animation: blink 0.9s steps(1) infinite;
 }
 
+.output-columns {
+  display: flex;
+  gap: 1.2rem;
+}
+
+.output-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.output-column h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  border-bottom: 1px dashed rgba(90, 74, 54, 0.35);
+  padding-bottom: 0.3rem;
+}
+
+@media (max-width: 720px) {
+  .output-columns {
+    flex-direction: column;
+  }
+}
+
 @keyframes blink {
   50% { border-color: transparent; }
 }

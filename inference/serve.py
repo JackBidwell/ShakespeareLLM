@@ -86,6 +86,7 @@ def generate_scratch(prompt, max_new_tokens=200, temperature=0.8, top_k=40, repe
     model, tokenizer = _load_scratch()
 
     tokens = torch.tensor(tokenizer.encode(prompt), dtype=torch.long).unsqueeze(0).to(DEVICE)
+    prompt_len = tokens.shape[1]
 
     for _ in range(max_new_tokens):
         tokens_cond = tokens[:, -model.block_size:]
@@ -105,7 +106,7 @@ def generate_scratch(prompt, max_new_tokens=200, temperature=0.8, top_k=40, repe
         next_token = torch.multinomial(probs, num_samples=1)
         tokens = torch.cat((tokens, next_token), dim=1)
 
-    return tokenizer.decode(tokens[0].tolist())
+    return tokenizer.decode(tokens[0, prompt_len:].tolist())
 
 
 def available_models():
