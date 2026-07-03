@@ -64,7 +64,7 @@ def _load_scratch():
 
 
 @torch.no_grad()
-def generate_gpt2(prompt, max_new_tokens=200, temperature=0.8, top_k=40):
+def generate_gpt2(prompt, max_new_tokens=200, temperature=0.8, top_k=40, repetition_penalty=1.2):
     model, tokenizer = _load_gpt2()
 
     input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(DEVICE)
@@ -74,13 +74,15 @@ def generate_gpt2(prompt, max_new_tokens=200, temperature=0.8, top_k=40):
         do_sample=True,
         temperature=max(temperature, 1e-3),
         top_k=top_k,
+        repetition_penalty=repetition_penalty,
+        no_repeat_ngram_size=3,
         pad_token_id=tokenizer.eos_token_id,
     )
     return tokenizer.decode(output_ids[0][input_ids.shape[1]:], skip_special_tokens=True)
 
 
 @torch.no_grad()
-def generate_scratch(prompt, max_new_tokens=200, temperature=0.8, top_k=40):
+def generate_scratch(prompt, max_new_tokens=200, temperature=0.8, top_k=40, repetition_penalty=1.2):
     model, tokenizer = _load_scratch()
 
     tokens = torch.tensor(tokenizer.encode(prompt), dtype=torch.long).unsqueeze(0).to(DEVICE)
@@ -88,6 +90,13 @@ def generate_scratch(prompt, max_new_tokens=200, temperature=0.8, top_k=40):
     for _ in range(max_new_tokens):
         tokens_cond = tokens[:, -model.block_size:]
         logits = model(tokens_cond)[:, -1, :] / max(temperature, 1e-3)
+
+        if repetition_penalty != 1.0:
+            seen = torch.unique(tokens_cond)
+            seen_logits = logits[:, seen]
+            logits[:, seen] = torch.where(
+                seen_logits > 0, seen_logits / repetition_penalty, seen_logits * repetition_penalty
+            )
 
         v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
         logits[logits < v[:, [-1]]] = float("-inf")
