@@ -1,0 +1,6 @@
+torch>=2.9
+tokenizers>=0.22
+transformers>=5.12
+accelerate>=1.14
+datasets>=5.0
+flask>=3.1
