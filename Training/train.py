@@ -3,9 +3,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from training.tokenizer import Tokenizer
-from training.dataset import ShakespeareDataset
-from models.transformer import GPTModel
+from Training.tokenizer import Tokenizer
+from Training.dataset import ShakespeareDataset
+from Models.Transformer import GPTModel
 
 batch_size = 32
 block_size = 256
@@ -14,7 +14,7 @@ learning_rate = 3e-4
 device = "cuda" if torch.cuda.is_available() else "cpu"
 max_batches_per_epoch = 500
 
-tokenizer = Tokenizer("data/raw/shakespeare.txt")
+tokenizer = Tokenizer("Data/Raw/Shakespeare.txt")
 
 dataset = ShakespeareDataset(
     tokenizer=tokenizer,

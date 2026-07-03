@@ -1,12 +1,12 @@
 import torch
 import torch.nn.functional as F
 
-from training.tokenizer import Tokenizer
-from models.transformer import GPTModel
+from Training.tokenizer import Tokenizer
+from Models.Transformer import GPTModel
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-tokenizer = Tokenizer("data/raw/shakespeare.txt")
+tokenizer = Tokenizer("Data/Raw/Shakespeare.txt")
 
 model = GPTModel(
     vocab_size=tokenizer.vocab_size,
